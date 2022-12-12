@@ -1,27 +1,17 @@
 from requests import get
 
 
-url = {
+apiurl = {
     'account': 'https://eun1.api.riotgames.com/lol/summoner/v4/summoners/by-name/',
     'matchlist': 'https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/',
     'matchdata': 'https://europe.api.riotgames.com/lol/match/v5/matches/',
-        }
+}
+with open('token.md', 'r') as f:
+        apitoken = f.read()
 
-
-class X:
-
+class Requester:
     def __init__(self):
-        with open('token.md', 'r') as f:
-            self.token = f.read()
-
-    def lastMatchLeaderboard(self):
-        identity = self.puuid()
-        if identity:
-            matchids = self.matchlist(identity['puuid'])
-            matchid = matchids[0]
-            match = self.getmatch(matchid)
-            data = self.extractDataFromMatch(match)
-            self.analyze(data)
+        self.apitoken = apitoken
 
 
     def puuid(self, name='Norcia'):
@@ -32,13 +22,13 @@ class X:
 
         return
         
-    def matchlist(self, puuid, n=1):
-        q = url['matchlist'] + puuid + '/ids?start=0&count=' + str(n) + '&api_key=' + self.token
+def getMatchIDs(self, puuid, count=1):
+        q = url['matchlist'] + puuid + '/ids?start=0&count=' + str(count) + '&api_key=' + self.apitoken
         r = get(q)
         return r.json()
 
     def getmatch(self, matchid):
-        q = url['matchdata'] + matchid + '?api_key=' + self.token
+        q = url['matchdata'] + matchid + '?api_key=' + self.apitoken
         r = get(q)
         r = r.json()
         return r
@@ -126,12 +116,52 @@ class X:
         for i in x:
             print(i)
 
+def lastMatchLeaderboard(self):
+    identity = self.puuid()
+    if identity:
+        matchids = self.matchlist(identity['puuid'])
+        matchid = matchids[0]
+        match = self.getmatch(matchid)
+        data = self.extractDataFromMatch(match)
+        self.analyze(data)
 
 def calc(pos, ar):
     return round((ar[pos] - ar[-1])/(ar[-2] - ar[-1]), 2)
 
+#
+# MAIN PROCEDURES
+#
+
+# Harvest: pozbieraj id ostatnich stu meczy uzytkowników kluczowych i zaimportuj do bazy danych, usun duplikaty nieocenionych meczy
+    # SELECT puuid, name FROM user WHERE keyuser = 1;
+    # wypisz nazwy userow kluczowych oraz ich liczbe w ostatnim wierszu
+        # czy zatwierdzic?
+            # exit: odrzucowo
+            # return
+    
+    # clear
+    # dla kazdego usera
+        # pobierz n id meczy trybu aram
+        # jezeli istnieje insert kazdego meczu do bazy danych z oznaczeniem przeanalizowania 0
+        # wyswietl id wprowadzone/id odzucone
+
+# Analyze: zacznij analize meczy w bazie danych, według kolejnoci id 
+    # wez posortowane id meczy nieprzeanalizowanych
+    # dla kazdego id
+        # wyciahnij z serwerow riot games pelne dane meczu
+        # opcjonalnie: wprowadz wszystkie dane do naszej bazy danych - o ile pamiec pozwoli - dla przyszlych projektow!
+        # przeanalizuj
+            # utworz obiekt gracze [puuid, [wszystkie potrzebne dane z meczu od riot], mu, sigma]
+            # oblicz wskaznik istotnosci
+            # posortuj obiekty
+            # wprowadz zaktualizowane wartosci do trueskill
+            # zaktualizowane wartosci wprowadz do bazy danych
+                # zmien status przeanalizowanego meczu w bazie z 0 na 1
+                # zaktualizj mu, sigme, matchcount
+                    # gdy nie znajdzie gracza, ma go utworzyc z nowopowstanych danych
 
 if __name__ == '__main__':
-
-    main = X()
-    main.lastMatchLeaderboard()
+    summonerid = getSummonerIDByName("Norcia")
+    match = getLastMatch(summonerId)
+    Analyzer.launch(match)
+            
