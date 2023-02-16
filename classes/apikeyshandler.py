@@ -40,6 +40,9 @@ class APIKeysHandler:
         for key in current_keys:
             if self.validate_key(key):
                 working_keys.append(key)
+        if not working_keys:
+            self.log.warning('There is no single valid key')
+            raise Exception('No valid keys found!')
         if working_keys != current_keys:
             self.log.info('Detected some invalid keys...')
             self.keys = working_keys
