@@ -13,11 +13,12 @@ class APIKeysHandler:
     def __init__(self) -> None:
         self.log.info('APIKeysHandler initialized')
         self.keys: list[str] = self.import_keys()
+        self.speed_limit: float = 0
         if not self.keys:
             self.log.warning('No keys loaded. Key file seems empty')
             return
-        self.check_keys()
-        self.speed_limit: float = self.get_absolute_requests_speed()
+        if self.check_keys():
+            self.speed_limit: float = self.get_absolute_requests_speed()
 
     def __str__(self) -> str:
         msg = 'Here are all the keys:\n'
@@ -33,20 +34,21 @@ class APIKeysHandler:
             [keys.append(line[:-1]) for line in file]
         return keys
 
-    def check_keys(self) -> None:
+    def check_keys(self) -> bool:
         self.log.info('Checking keys')
         current_keys: list[str] = self.keys
         working_keys: list[str] = []
         for key in current_keys:
             if self.validate_key(key):
                 working_keys.append(key)
-        if not working_keys:
-            self.log.warning('There is no single valid key')
-            raise Exception('No valid keys found!')
         if working_keys != current_keys:
             self.log.info('Detected some invalid keys...')
             self.keys = working_keys
             self.update_keys_file()
+        if not working_keys:
+            self.log.warning('There is no single valid key')
+            return False
+        return True
         
     def validate_key(self, apikey) -> bool:
         url: str = self.URL_FOR_KEY_CHECK
@@ -83,7 +85,7 @@ class APIKeysHandler:
             self.log.warning('There is no key to return')
             return ''
         sleep(self.speed_limit)
-        if len(self.keys) != 1:
+        if len(self.keys) > 1:
             self.move_keys_queue_by_one()
         self.log.info(f'Returning key: {self.keys[0]}')
         return self.keys[0]
