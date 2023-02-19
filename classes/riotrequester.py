@@ -28,7 +28,8 @@ class RiotRequester:
         self.last_status_code = False
 
     def get_matchlist_by_puuid(self, puuid: str, queue: str = QUEUE['aram']) -> list[str]:
-        self.log.info(f'Requesting match list by puuid: {puuid}')
+        log_msg = f'Requesting match list by puuid: {puuid}'
+        self.log.info(log_msg)
         key: str = self.keys.get_one()
         query: str = ''
         query += self.URL['matchids']
@@ -37,38 +38,35 @@ class RiotRequester:
         query += '&start=0&count=100&'
         query += 'api_key=' + key
         response = get(query)
-        self.request_check(response)
-        matchlist: list[str] = response.json()
+        matchlist: list[str] = self.request_check(response, log_msg)
         return matchlist
 
     def get_match_by_match_id(self, match_id) -> dict[str, Any]:
-        self.log.info(f'Requesting match data by match id: {match_id}')
+        log_msg = f'Requesting match data by match id: {match_id}' 
+        self.log.info(log_msg)
         url: str = self.URL['matchdata']
         key: str = self.keys.get_one()
         query: str = url + match_id + '?api_key=' + key
         response = get(query)
-        self.request_check(response)
-        match: dict[str, Any] = response.json()
+        match: dict[str, Any] = self.request_check(response, log_msg)
         return match
 
     def get_summoner_by_name(self, name: str) -> dict[str, Any]:
-        self.log.info(f'Requesting summoner data for name: {name}')
+        log_msg: str  = f'Requesting summoner data for name: {name}'
+        self.log.info(log_msg)
         key: str = self.keys.get_one()
         url: str = self.URL['summoner']
         query: str = url + name + '?api_key=' + key
         self.log.debug(f'query: {query}')
         response = get(query)
-        self.request_check(response)
-        summoner: dict[str, Any] = response.json()
+        summoner: dict[str, Any] = self.request_check(response, log_msg)
         return summoner
 
-    def request_check(self, response) -> None:
-        code: int = response.status_code
-        url: str = response.url
-        self.last_status_code: int = code
-        if code == 200:
-            msg: str = f'[OK] geting response for: {url}'
-            self.log.info(msg)
-        if code != 200:
-            msg: str = f'Unhandled request response. Status code: {code}'
+    def request_check(self, response, topic: str):
+        if not response.ok:
+            reason: str = response.reason
+            code: int = response.status_code
+            msg: str = f'[{code}][{reason}] {topic}'
             self.log.warning(msg)
+            return 
+        return response.json()
