@@ -83,7 +83,8 @@ class APIKeysHandler:
             self.log.warning('There is no key to return')
             return ''
         sleep(self.speed_limit)
-        self.move_keys_queue_by_one()
+        if len(self.keys) != 1:
+            self.move_keys_queue_by_one()
         self.log.info(f'Returning key: {self.keys[0]}')
         return self.keys[0]
 
