@@ -27,7 +27,7 @@ class RiotRequester:
             raise Exception('Error: No valid keys found')
         self.last_status_code = False
 
-    def get_matchlist_by_puuid(self, puuid: str, queue: str = QUEUE['aram']) -> list[str]:
+    def get_matchlist_by_puuid(self, puuid: str, queue: str = QUEUE['aram']):
         log_msg = f'Requesting match list by puuid: {puuid}'
         self.log.info(log_msg)
         key: str = self.keys.get_one()
@@ -37,8 +37,13 @@ class RiotRequester:
         query += 'queue=' + queue
         query += '&start=0&count=100&'
         query += 'api_key=' + key
-        response = get(query)
+        try:
+            response = get(query)
+        except Exception as e:
+            self.log.warning(e)
+            return
         matchlist: list[str] = self.request_check(response, log_msg)
+        self.log.info(f'Recieved {len(matchlist)} match identities')
         return matchlist
 
     def get_match_by_match_id(self, match_id) -> dict[str, Any]:
@@ -70,3 +75,11 @@ class RiotRequester:
             self.log.warning(msg)
             return 
         return response.json()
+
+    def get_queue_ids(self) -> list[str]:
+        queue_ids: list[str] = []
+        for q in self.QUEUE:
+            q_id: str = self.QUEUE[q]
+            queue_ids.append(q_id)
+        return queue_ids
+
