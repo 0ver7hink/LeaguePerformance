@@ -20,10 +20,13 @@ class MatchAnalyzer:
             'timeCCingOthers',
             ],
         'challenges': [
-            'saveAllyFromDeath',
             'killParticipation',
+            'kda',
             'effectiveHealAndShielding',
+            'saveAllyFromDeath',
             'immobilizeAndKillWithAlly',
+            'killAfterHiddenWithAlly',
+            'knockEnemyIntoTeamAndKill',
             ],
         }
      
@@ -57,11 +60,6 @@ class MatchAnalyzer:
             except Exception as e:
                 print('Missing statistic: ' + value)
                 continue
-        k = np.array([x['kills'] for x in self.data['info']['participants']])
-        d = np.array([x['deaths'] for x in self.data['info']['participants']])
-        a = np.array([x['assists'] for x in self.data['info']['participants']])
-        kda = (k+a)/d
-        self.extracted.append(kda) 
         self.log.debug(self.extracted)
 
     def calculate_performance(self):
