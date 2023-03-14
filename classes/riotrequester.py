@@ -12,10 +12,10 @@ class RiotRequester:
             'matchdata': 'https://europe.api.riotgames.com/lol/match/v5/matches/',
             }
     QUEUE = {
-            'draft':  '400',
-            'ranked': '420',
-            'blind':  '430',
-            'flex':   '440',
+            # 'draft':  '400',
+            # 'ranked': '420',
+            # 'blind':  '430',
+            # 'flex':   '440',
             'aram':   '450',
             }
     def __init__(self) -> None:
@@ -43,8 +43,11 @@ class RiotRequester:
             self.log.warning(e)
             return
         matchlist: list[str] = self.request_check(response, log_msg)
-        self.log.info(f'Recieved {len(matchlist)} match identities')
-        return matchlist
+        if matchlist:
+            self.log.info(f'Recieved {len(matchlist)} match identities')
+            print(f'Got {len(matchlist)} matches from {puuid[:8]} for queue:{queue}')
+            return matchlist
+        return None
 
     def get_match_by_match_id(self, match_id) -> dict[str, Any]:
         log_msg = f'Requesting match data by match id: {match_id}' 
