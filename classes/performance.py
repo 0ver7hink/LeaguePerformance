@@ -17,7 +17,7 @@ class MatchAnalyzer:
             ],
         'statistics': [
             'damageDealtToObjectives',
-            'visionScore',
+            'totalDamageDealtToChampions',
             'timeCCingOthers',
             ],
         'challenges': [
