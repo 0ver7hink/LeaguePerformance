@@ -46,11 +46,13 @@ class DBHandler:
         if not row:
             self.log.info('Player not found in local DB')
             self.insert_player(player_name, tracking=1)
+            print('Player not found')
             return
         if row[2]:
             self.log.info('Player already tracked')
+            print('Player already tracked')
             return
-        query = f'UPDATE summoner SET tracking=1 WHERE name="{player_name}";'
+        query = f'UPDATE summoner_v2 SET tracked=1 WHERE name="{player_name}";'
         cursor.execute(query)
         self.db.commit()
         self.log.info(f'Player {player_name} is now tracked')
