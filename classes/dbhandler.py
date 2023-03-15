@@ -39,7 +39,7 @@ class DBHandler:
             self.log.warning(self.warning)
             return
         self.log.info(f'Requested tracking of player: {player_name}')
-        query = f'select name,puuid,tracking FROM summoner WHERE name="{player_name}";'
+        query = f'select name,puuid,tracked FROM summoner_v2 WHERE name="{player_name}";'
         cursor = self.db.cursor()
         cursor.execute(query)
         row = cursor.fetchone()
@@ -56,21 +56,33 @@ class DBHandler:
         self.log.info(f'Player {player_name} is now tracked')
         print('Player is now tracked')
 
-    def insert_player(self, player_name, tracking=0) -> None:
-        if self.warning:
-            self.log.warning(self.warning)
-            return
-        self.log.info('Checking if player exist in Riot Database')
-        requesting = riotrequester.RiotRequester()
-        player = requesting.get_summoner_by_name(player_name)
-        if not player:
-            self.log.warning('Cannot track unexisting player')
-            return
-        self.log.info('Player found')
-        name = player['name']
-        puuid = player['puuid']
-        query: str = 'INSERT INTO summoner (name, puuid, tracking, join_date) VALUES '
-        query += f'("{name}", "{puuid}", {tracking}, NOW());'
+    def insert_player(self, player_name, puuid='', tracking=0) -> None:
+        if not puuid:
+            self.log.info('Checking if player exist in Riot Database')
+            requesting = riotrequester.RiotRequester()
+            player = requesting.get_summoner_by_name(player_name)
+            if not player:
+                self.log.warning('Cannot track unexisting player')
+                return
+            self.log.info('Player found')
+            puuid = player['puuid']
+        query: str = f'''INSERT INTO summoner_v2 (
+            puuid, 
+            name, 
+            tracked, 
+            mmr_mu, mmr_sigma,
+            performance_mu, performance_sigma,
+            match_count,
+            join_date
+        ) VALUES (
+            "{puuid}", 
+            "{player_name}", 
+            {tracking}, 
+            25.000, 8.333,
+            25.000, 8.333,
+            {0},
+            NOW())
+        ;'''
         cursor = self.db.cursor()
         cursor.execute(query)
         self.db.commit()
@@ -81,7 +93,7 @@ class DBHandler:
         if self.warning:
             self.log.warning(self.warning)
             return
-        query: str = 'SELECT puuid FROM summoner WHERE tracking=1;'
+        query: str = 'SELECT puuid FROM summoner_v2 WHERE tracked=1;'
         cursor = self.db.cursor()
         cursor.execute(query)
         puuids = cursor.fetchall() 
@@ -115,25 +127,41 @@ class DBHandler:
         data = cursor.fetchall()
         return data
 
-    def get_rating(self, puuid, gamemode):
-        self.log.info(f'Geting ratings from local DB for {puuid[:8]}...')
-        query = f'SELECT mu,sigma FROM rating WHERE puuid="{puuid}" AND gamemode="{gamemode}";'
+    def get_rating(self, participant):
+        name = participant['summonerName']
+        puuid = participant['puuid']
+        query = f'''
+        SELECT 
+            mmr_mu, mmr_sigma, 
+            performance_mu, performance_sigma 
+        FROM 
+            summoner_v2
+        WHERE 
+            puuid="{puuid}";
+        '''
         cursor = self.db.cursor()
         cursor.execute(query)
         if (row := cursor.fetchone()):
-            return [row[0], row[1]]
+            return row
         cursor.reset()
-        query = 'INSERT INTO rating (puuid, gamemode, mu, sigma, match_count) '
-        query += f'VALUES ("{puuid}","{gamemode}",25.000, 8.333, 0);'
-        cursor = self.db.cursor()
-        cursor.execute(query)
-        self.db.commit()
-        return [25.000, 8.333]
+        self.insert_player(name, puuid)
+        return [25.000, 8.333, 25.000, 8.333]
 
-    def update_rating(self, puuid, mu, sigma, gamemode):
+    def update_rating(self, name, puuid, m1, s1, m2, s2):
         self.log.info(f'Updating ratings in local DB for {puuid[:8]}...')
         cursor = self.db.cursor()
-        query = f'UPDATE rating SET mu={mu}, sigma={sigma}, match_count = match_count+1 WHERE puuid="{puuid}" AND gamemode="{gamemode}";'
+        query = f'''
+        UPDATE 
+            summoner_v2 
+        SET 
+            mmr_mu={m1}, 
+            mmr_sigma={s1}, 
+            performance_mu={m2},
+            performance_sigma={s2},
+            match_count = match_count+1 
+        WHERE 
+            puuid="{puuid}";
+        '''
         cursor.execute(query)
         self.db.commit()
 
