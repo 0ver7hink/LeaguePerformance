@@ -96,9 +96,7 @@ class DBHandler:
             return
         query = 'INSERT IGNORE INTO `match` VALUES '
         for match in matchlist:
-            queue = int(match[0])
-            match_id = match[1]
-            values = f'("{match_id}", {queue}, 0),'
+            values = f'("{match}", 0),'
             query += values
         query = query[:-1] + ';'
         cursor = self.db.cursor()
@@ -106,11 +104,9 @@ class DBHandler:
         self.db.commit()
         self.log.info('Matchlist exported')
 
-    def get_matchlist(self, queue_id: str = '', limit: int = 0):
+    def get_matchlist(self, limit: int = 0):
         self.log.info('Geting matchlist from local DB')
-        query = f'SELECT `id` FROM `match` WHERE `analysed`=0 '
-        if queue_id:
-            query +=  f'AND queue_id={queue_id} '
+        query = f'SELECT `id` FROM `match` WHERE `analyzed`=0 '
         if limit:
             query += f'LIMIT {limit} '
         query += 'ORDER BY id;'
@@ -144,6 +140,6 @@ class DBHandler:
     def set_match_as_analyzed(self, match_id):
         self.log.info(f'setting match {match_id} as analyzed')
         cursor = self.db.cursor()
-        query = f'UPDATE `match` SET analysed=1 WHERE id="{match_id}";'
+        query = f'UPDATE `match` SET analyzed=1 WHERE id="{match_id}";'
         cursor.execute(query)
         self.db.commit()

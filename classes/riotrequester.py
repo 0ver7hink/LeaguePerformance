@@ -11,13 +11,7 @@ class RiotRequester:
             'matchids': 'https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/',
             'matchdata': 'https://europe.api.riotgames.com/lol/match/v5/matches/',
             }
-    QUEUE = {
-            # 'draft':  '400',
-            # 'ranked': '420',
-            # 'blind':  '430',
-            # 'flex':   '440',
-            'aram':   '450',
-            }
+
     def __init__(self) -> None:
         self.log = logging.getLogger('RiotRequester')
         self.log.info('Initializing RiotRequester')
@@ -27,15 +21,15 @@ class RiotRequester:
             raise Exception('Error: No valid keys found')
         self.last_status_code = False
 
-    def get_matchlist_by_puuid(self, puuid: str, queue: str = QUEUE['aram']):
+    def get_matchlist_by_puuid(self, puuid: str, quantity: int = 100):
         log_msg = f'Requesting match list by puuid: {puuid}'
         self.log.info(log_msg)
         key: str = self.keys.get_one()
         query: str = ''
         query += self.URL['matchids']
         query += puuid + '/ids?'
-        query += 'queue=' + queue
-        query += '&start=0&count=100&'
+        query += 'queue=450'
+        query += f'&start=0&count={quantity}&'
         query += 'api_key=' + key
         try:
             response = get(query)
@@ -45,7 +39,7 @@ class RiotRequester:
         matchlist: list[str] = self.request_check(response, log_msg)
         if matchlist:
             self.log.info(f'Recieved {len(matchlist)} match identities')
-            print(f'Got {len(matchlist)} matches from {puuid[:8]} for queue:{queue}')
+            print(f'Got {len(matchlist)} matches from {puuid[:8]}')
             return matchlist
         return None
 
@@ -78,11 +72,3 @@ class RiotRequester:
             self.log.warning(msg)
             return 
         return response.json()
-
-    def get_queue_ids(self) -> list[str]:
-        queue_ids: list[str] = []
-        for q in self.QUEUE:
-            q_id: str = self.QUEUE[q]
-            queue_ids.append(q_id)
-        return queue_ids
-
