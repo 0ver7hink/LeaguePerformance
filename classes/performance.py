@@ -109,7 +109,7 @@ class MatchAnalyzer:
     def rate_performance(self):
         self.log.info('Rating participants')
         x = list(zip(*self.extracted)) 
-        x.sort(key=lambda i: i[-3], reverse=True)
+        x.sort(key=lambda i: i[-7], reverse=True)
         rating_group = []
         for i in x:
             row = (trueskill.Rating(i[-2], i[-1]),)
