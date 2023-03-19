@@ -56,21 +56,25 @@ def analyze_matches():
     db = dbhandler.DBHandler()
     match_ids = db.get_matchlist()
     del db
-    ritopls = riotrequester.RiotRequester()
-    current = 1
     total = len(match_ids)
-    for match_id in match_ids:
-        match_data = ritopls.get_match_by_match_id(match_id[0])
-        clear()
-        msg = f'({current}/{total}) {match_id[0]}'
-        print(msg)
-        current += 1
-        target = performance.MatchAnalyzer(match_data)     
-        target.analyze()
-        target.update_ratings()
-        del target
+    for idx, match_id in enumerate(match_ids):
+        msg = f'({idx}/{total}) {match_id[0]}'
+        try:
+            analyze_match(match_id)
+            print(msg)
+        except TypeError as e:
+            print(f'An error has occured: {e}')
 
-def main_menu() -> None:
+def analyze_match(match_id) -> None:
+    ritopls = riotrequester.RiotRequester()
+    match_data = ritopls.get_match_by_match_id(match_id[0])
+    clear()
+    target = performance.MatchAnalyzer(match_data)     
+    target.analyze()
+    target.update_ratings()
+    del target
+
+def menu_index() -> None:
     print('''
     1. Track player
     2. harvest match ids
@@ -78,26 +82,30 @@ def main_menu() -> None:
     4. Analyze Matches
     0. Exit
     ''')
-    choice: int = int(input(':> '))
+
+def run_command(command: str) -> None:
+    match command:
+        case '0':
+            exit()
+        case '1':
+            add_player_to_tracklist()
+        case '2':
+            harvest_match_ids()
+        case '3':
+            last_match_result()
+        case '4':
+            analyze_matches()
+        case other:
+            clear()
+            print('Invalid command')
+
+def main() -> None:
     clear()
-    if choice == 0:
-        exit()
-    elif choice == 1:
-        add_player_to_tracklist()
-    elif choice == 2:
-        harvest_match_ids()
-    elif choice == 3:
-        last_match_result()
-    elif choice == 4:
-        analyze_matches()
-    elif choice == 5:
-        pass
-    else:
-        print('Invalid Option')
-    main_menu()
-    
+    while True:
+        menu_index()
+        command: str = input(':> ')
+        run_command(command)
 
 if __name__ == '__main__':
-    # logging.basicConfig(level=logging.INFO)
-    clear()
-    main_menu()
+    # logging.basicConfig(level=logging.DEBUG)
+    main()
