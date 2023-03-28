@@ -118,20 +118,23 @@ class DBHandler:
         self.db.commit()
         self.log.info('Matchlist exported')
 
-    def get_matchlist(self, limit: int = 0):
+    def get_matchlist(self, limit=0, reverse=False, not_analyzed_only=True):
         self.log.info('Geting matchlist from local DB')
-        query = f'SELECT `id` FROM `match` WHERE `analyzed`=0 '
+        query = 'SELECT `id` FROM `match` WHERE id like "EUN%" '
+        if not_analyzed_only:
+            query += 'AND `analyzed=`0 '
+        query += 'ORDER BY `id` '
+        if reverse:
+            query += 'DESC '
         if limit:
-            query += f'LIMIT {limit} '
-        query += 'ORDER BY id;'
+            query += f'LIMIT {limit}'
+        query += ';'
         cursor = self.db.cursor()
         cursor.execute(query)
         data = cursor.fetchall()
         return data
 
-    def get_rating(self, participant):
-        name = participant['summonerName']
-        puuid = participant['puuid']
+    def get_rating(self, name, puuid):
         query = f'''
         SELECT 
             mmr_mu, mmr_sigma, 
