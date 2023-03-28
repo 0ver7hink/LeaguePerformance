@@ -7,7 +7,7 @@ class APIKeysHandler:
 
     log = logging.getLogger('APIKeysHandler')
     KEYS_LOCATION = 'apikeys.md'
-    KEY_MAX_REQUESTS_PER_MINUTE = 50
+    KEY_MAX_REQUESTS_PER_MINUTE = 60
     URL_FOR_KEY_CHECK = 'https://eun1.api.riotgames.com/lol/status/v4/platform-data?api_key='
 
     def __init__(self) -> None:
@@ -16,7 +16,7 @@ class APIKeysHandler:
         self.speed_limit: float = 0
         if not self.keys:
             self.log.warning('No keys loaded. Key file seems empty')
-            return
+            raise Exception('Missing API Key') 
         if self.check_keys():
             self.speed_limit: float = self.get_absolute_requests_speed()
 
@@ -47,7 +47,7 @@ class APIKeysHandler:
             self.update_keys_file()
         if not working_keys:
             self.log.warning('There is no single valid key')
-            return False
+            
         return True
         
     def validate_key(self, apikey) -> bool:
