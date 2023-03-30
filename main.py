@@ -6,6 +6,7 @@ from pprint import pprint
 import itertools
 import logging
 import os
+import keras
 
 
 def clear() -> None:
@@ -17,14 +18,13 @@ def last_match_result() -> None:
     summoner = ritopls.get_summoner_by_name(name)
     last_match_ids = ritopls.get_matchlist_by_puuid(summoner['puuid'], 1)
     match_id = last_match_ids[0]
-    match = ritopls.get_match_by_match_id(match_id)
-    target = performance.MatchAnalyzer(match)
-    target.analyze()
+    match_data = ritopls.get_match_by_match_id(match_id)
+    target = performance.Match(match_data)
+    target.show_participants()
 
 def add_player_to_tracklist() -> None:
-    msg: str = 'Player name: ' 
     print('(To exit, isnert 0)')
-    name: str = input(msg)
+    name: str = input('Player name: ')
     clear()
     if name == '0':
         return
@@ -52,26 +52,25 @@ def harvest_match_ids() -> None:
     db.export_matchlist_to_local_db(match_ids)
     del db
 
-def analyze_matches():
+def analyze_matches() -> None:
     db = dbhandler.DBHandler()
     match_ids = db.get_matchlist()
     del db
-    total = len(match_ids)
+    ritopls = riotrequester.RiotRequester()
+    model = keras.models.load_model('model_7828')
     for idx, match_id in enumerate(match_ids):
-        msg = f'({idx}/{total}) {match_id[0]}'
+        print(f'({idx}/{len(match_ids)}) {match_id[0]}')
         try:
-            analyze_match(match_id)
-            print(msg)
+            analyze_match(match_id[0], ritopls, model)
         except TypeError as e:
             print(f'An error has occured: {e}')
 
-def analyze_match(match_id) -> None:
-    ritopls = riotrequester.RiotRequester()
-    match_data = ritopls.get_match_by_match_id(match_id[0])
+def analyze_match(match_id, ritopls, model) -> None:
+    match_data = ritopls.get_match_by_match_id(match_id)
     clear()
-    target = performance.MatchAnalyzer(match_data)     
-    target.analyze()
-    target.update_ratings()
+    target = performance.Match(match_data, model)     
+    target.show_participants()
+    target.commit()
     del target
 
 def menu_index() -> None:
@@ -84,20 +83,16 @@ def menu_index() -> None:
     ''')
 
 def run_command(command: str) -> None:
-    match command:
-        case '0':
-            exit()
-        case '1':
-            add_player_to_tracklist()
-        case '2':
-            harvest_match_ids()
-        case '3':
-            last_match_result()
-        case '4':
-            analyze_matches()
-        case other:
-            clear()
-            print('Invalid command')
+    if command == '0':
+        exit()
+    if command == '1':
+        add_player_to_tracklist()
+    if command == '2':
+        harvest_match_ids()
+    if command == '3':
+        last_match_result()
+    if command == '4':
+        analyze_matches()
 
 def main() -> None:
     clear()
@@ -107,5 +102,5 @@ def main() -> None:
         run_command(command)
 
 if __name__ == '__main__':
-    # logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.INFO)
     main()

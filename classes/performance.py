@@ -37,14 +37,14 @@ class Match:
             'killAfterHiddenWithAlly',
             'knockEnemyIntoTeamAndKill',],}
 
-    def __init__(self, match_data: dict[str, Any]) -> None:
+    def __init__(self, match_data: dict[str, Any], model) -> None:
         self.log = logging.getLogger('Match')
         self.log.info('Class initiated...')
         self.data: dict[str, Any] = match_data
         self.data_extracted: list[Any] = self._extract()
         self.summoners: list[Summoner] = [
                 Summoner(row) for row in self.data_extracted]
-        self.model = keras.models.load_model('model_7828')
+        self.model = model
         self._calculate_win_probability()
         self._download_ratings()
         self._rate_mmr()
@@ -108,8 +108,10 @@ class Match:
             
     def _calculate_win_probability(self) -> None:
         self.log.info('Calculating win probability')
-        for summoner in self.summoners:
-            summoner.win_prob = self.model.predict([summoner.stats])[0,0]
+        to_predict: list[list[float]] = [s.stats for s in self.summoners]
+        predicted = self.model.predict(to_predict)
+        for idx, prediction in enumerate(predicted):
+            self.summoners[idx].win_prob = prediction[0]
 
     def show_participants(self) -> None:
         self.summoners.sort(key=lambda x: x.win_prob, reverse=True)
