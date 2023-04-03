@@ -122,11 +122,11 @@ class DBHandler:
         self.log.info('Geting matchlist from local DB')
         query = 'SELECT `id` FROM `match` WHERE id like "EUN%" '
         if not_analyzed_only:
-            query += 'AND `analyzed=`0 '
+            query += 'AND `analyzed`=0 '
         query += 'ORDER BY `id` '
         if reverse:
             query += 'DESC '
-        if limit:
+        if limit != 0:
             query += f'LIMIT {limit}'
         query += ';'
         cursor = self.db.cursor()
@@ -159,6 +159,7 @@ class DBHandler:
         UPDATE 
             summoner_v2 
         SET 
+            name = {name},
             mmr_mu={m1}, 
             mmr_sigma={s1}, 
             performance_mu={m2},
