@@ -159,7 +159,7 @@ class DBHandler:
         UPDATE 
             summoner_v2 
         SET 
-            name = {name},
+            name = "{name}",
             mmr_mu={m1}, 
             mmr_sigma={s1}, 
             performance_mu={m2},
